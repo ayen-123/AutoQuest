@@ -2,7 +2,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt #hash the password from user
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='../static/templates', static_folder='../static')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///main.db'
 app.config['SECRET_KEY'] = '54d4ba538a7892d0e826d4ac'
 db = SQLAlchemy(app)
