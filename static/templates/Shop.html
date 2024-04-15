@@ -1,0 +1,160 @@
+{% extends 'base.html'%}
+{% block title %}
+Shop
+{% endblock %}
+
+{% block content%}
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Product Page</title>
+</head>
+<body>
+<div class="products">
+  <div class="product">
+    <span class="product__price">$120</span>
+    <img class="product__image" src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/26438/shoe.png" alt="Nike Roshe Run Print">
+    <h1 class="product__title">Nike Roshe Run Print</h1>
+    <hr />
+    <p>The Nike Roshe One Print Men's Shoe offers breathability, lightweight cushioning and bold style with an injected unit midsole and colorful mesh upper. </p>
+    <a href="#" class="product__btn btn">Buy Now</a>
+  </div>
+
+  <!-- Add more product items below -->
+  <div class="product">
+    <span class="product__price">$120</span>
+    <img class="product__image" src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/26438/shoe.png" alt="Nike Roshe Run Print">
+    <h1 class="product__title">Nike Roshe Run Print</h1>
+    <hr />
+    <p>The Nike Roshe One Print Men's Shoe offers breathability, lightweight cushioning and bold style with an injected unit midsole and colorful mesh upper. </p>
+    <a href="#" class="product__btn btn">Buy Now</a>
+  </div>
+
+  <div class="product">
+    <span class="product__price">$120</span>
+    <img class="product__image" src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/26438/shoe.png" alt="Nike Roshe Run Print">
+    <h1 class="product__title">Nike Roshe Run Print</h1>
+    <hr />
+    <p>The Nike Roshe One Print Men's Shoe offers breathability, lightweight cushioning and bold style with an injected unit midsole and colorful mesh upper. </p>
+    <a href="#" class="product__btn btn">Buy Now</a>
+  </div>
+
+  <div class="product">
+    <span class="product__price">$120</span>
+    <img class="product__image" src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/26438/shoe.png" alt="Nike Roshe Run Print">
+    <h1 class="product__title">Nike Roshe Run Print</h1>
+    <hr />
+    <p>The Nike Roshe One Print Men's Shoe offers breathability, lightweight cushioning and bold style with an injected unit midsole and colorful mesh upper. </p>
+    <a href="#" class="product__btn btn">Buy Now</a>
+  </div>
+  <div class="product">
+    <span class="product__price">$120</span>
+    <img class="product__image" src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/26438/shoe.png" alt="Nike Roshe Run Print">
+    <h1 class="product__title">Nike Roshe Run Print</h1>
+    <hr />
+    <p>The Nike Roshe One Print Men's Shoe offers breathability, lightweight cushioning and bold style with an injected unit midsole and colorful mesh upper. </p>
+    <a href="#" class="product__btn btn">Buy Now</a>
+  </div>
+</div>
+</body>
+  <style>
+/* CSS styles */
+body {
+  font-family: -apple-system, ".SFNSText-Regular", 'Helvetica Neue', sans-serif;
+  line-height: 1.5;
+  color: #666;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color:  #F0F0F0;
+}
+.products {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  padding: 30px;
+}
+
+.product {
+  display: flex;
+  flex-direction: column;
+  align-items: center; 
+  width: alc(22% - 50px); /* Adjusted width for three products per row */
+  max-width: calc(22% - 50px); /* Limit the maximum width of each product */
+  position: relative;
+  padding: 30px;
+  border-radius: 8px;
+  background-color: #fff;
+  transition: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+  margin: 30px;
+  max-height: 500px;
+}
+
+.product:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 20px -10px rgba(0, 0, 0, 0.3); /* Adjusted box-shadow */
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Smooth transition */
+}
+
+.product__image {
+  position: relative;
+  width: 190%;
+  margin-left: -40%;
+  margin-right: -40%;
+  margin-top: -5px;
+  margin-bottom: 30px;
+  max-width: 500px;
+}
+
+.product__title {
+  font-size: 20px; /* Reduced font size */
+  color: #000000; /* Darker text color */
+  font-weight: 700;
+}
+
+.product__price {
+  position: absolute;
+  top: -20px;
+  left: -20px;
+  width: 80px;
+  height: 80px;
+  background-color: rgba(0, 0, 0, 0.95); /* Black background color */
+  color: #fff; /* White text color */
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8em;
+  text-transform: uppercase;
+  letter-spacing: 1.4px;
+  font-weight: 700;
+}
+
+.product__btn {
+  position: absolute;
+  bottom: -20px;
+  right: 20px;
+  background-color: rgba(207, 9, 44, 0.95); /* Accent color */
+  transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 10px 10px -5px rgba(0, 0, 0, 0.2); /* Darker shadow */
+  color: #fff; /* White text color */
+  text-align: center;
+  padding: 10px 20px; /* Reduced padding */
+  border-radius: 5px;
+  font-size: 0.8em;
+  text-transform: uppercase;
+  letter-spacing: 1.4px;
+  font-weight: 700;
+  text-decoration: none; /* Remove underline */
+}
+
+.product__btn:hover {
+  background-color: mix(rgba(207, 9, 44, 0.95), #000, 95%);
+  transform: translateY(-5px);
+}
+  </style>
+</html>
+
+{% endblock %}
