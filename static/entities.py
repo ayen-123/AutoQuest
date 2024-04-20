@@ -2,6 +2,7 @@ from static import db, bcrypt
 from datetime import datetime
 from flask_login import UserMixin
 from sqlalchemy import Enum
+from sqlalchemy.ext.hybrid import hybrid_property
 
 # Association Table
 dropOff = db.Table(
@@ -21,22 +22,30 @@ class Address(db.Model):
     streetNumber = db.Column(db.String(50), nullable=False)
     city = db.Column(db.String(50), nullable=False)
     province = db.Column(db.String(50), nullable=False)
-    postalCode = db.Column(db.Integer, nullable=False)
+    postalCode = db.Column(db.String(50), nullable=False)
+    
+    @hybrid_property
+    def fullAddressName(self):
+        return f"{self.streetNumber} {self.streetName}, {self.city}, {self.province}, {self.postalCode}"
     
     #an address can be shared by many users
     users = db.relationship('User', backref='person')
     
     #an address is a location assigned that can be shared by many employees
-    employees = db.relationship('Employee', backref='location')
+    employees = db.relationship('Employee', backref='location', foreign_keys='Employee.locationAssignedID')
     
     #an address can be shared by many rents including to and from location
-    toRents = db.relationship('Rent', backref='toPlace')
-    fromRents = db.relationship('Rent', backref='fromPlace')
+    toRents = db.relationship('Rent', backref='toPlace', foreign_keys='Rent.locationDropOffID')
+    fromRents = db.relationship('Rent', backref='fromPlace', foreign_keys='Rent.locationRentedID')
     
     #many-to-many relationship with Car Class
-    fromClass = db.relationship('CarClass', secondary=dropOff, backref=db.backref('fromLoc', lazy='dynamic'),overlaps="fromLoc,fromClass")
-    toClass = db.relationship('CarClass', secondary=dropOff, backref=db.backref('toLoc', lazy='dynamic'),overlaps="toLoc,toClass")
+    fromClass = db.relationship('CarClass', secondary=dropOff, 
+                                foreign_keys='[dropOff.c.fromLocation, dropOff.c.classID]',
+                                backref=db.backref('fromLoc', lazy='dynamic'), overlaps="fromLoc,fromClass")
     
+    toClass = db.relationship('CarClass', secondary=dropOff, 
+                              foreign_keys='[dropOff.c.toLocation, dropOff.c.classID]',
+                              backref=db.backref('toLoc', lazy='dynamic'), overlaps="toLoc,toClass")
 
 class CarClass(db.Model):
     __tablename__ = 'carClass'
@@ -52,7 +61,10 @@ class CarClass(db.Model):
     promotionals = db.relationship('Promotional', backref='promo')
     
     #many-to-many relationship with Address
-    place = db.relationship('Address', secondary=dropOff, backref=db.backref('location', lazy='dynamic'),overlaps="fromLoc,fromClass")
+    place = db.relationship('Address', secondary=dropOff,
+                            foreign_keys='[dropOff.c.classID, dropOff.c.toLocation]',
+                            backref=db.backref('location', lazy='dynamic'),
+                            overlaps="fromClass,fromLoc")
     
     
 class Car(db.Model):
@@ -64,6 +76,7 @@ class Car(db.Model):
     carColor = db.Column(db.String(50), nullable=False)
     licensePlate = db.Column(db.String(50), nullable=False, unique=True)
     classID = db.Column(db.Integer, db.ForeignKey('carClass.carClassID'), nullable=False) 
+    icon = db.Column(db.String(length=5000), nullable=True, unique=False)
 
 class Promotional(db.Model):
     __tablename__ = 'promotional'
@@ -93,6 +106,11 @@ class Rent(db.Model):
     promotionalID = db.Column(db.Integer, db.ForeignKey('promotional.promotionalID'), nullable=True)
     driverLicense = db.Column(db.Integer, db.ForeignKey('user.driverLicense'), nullable=False)
     
+    #explicitly specify foreign key
+    toAddress = db.relationship('Address', backref='rentsToAddress', foreign_keys='Rent.locationDropOffID')
+    fromAddress = db.relationship('Address', backref='rentsFromAddress', foreign_keys='Rent.locationRentedID')
+    
+    
     
 class User(db.Model,UserMixin):
     __tablename__ = 'user'
@@ -103,7 +121,7 @@ class User(db.Model,UserMixin):
     type = db.Column(Enum('customer','employee'), default='customer', nullable=False) 
     
     #a user can have many phone numbers
-    phoneNumbers = db.relationship('PhoneNumber', backref='owner')
+    userPhoneNumbers = db.relationship('PhoneNumber', backref='user_owner')
     
     #a user can request many rents
     rents = db.relationship('Rent', backref='renters')
@@ -146,6 +164,10 @@ class Employee(User):
     __mapper_args__ = {
         'polymorphic_identity': 'employee',
     }
+    
+    #explicitly specify foreign key
+    assignedAddress = db.relationship('Address', backref='employeeLocations', foreign_keys='Employee.locationAssignedID')
+    
     
 
 class Customer(User):
