@@ -50,14 +50,13 @@ class Address(db.Model):
 class CarClass(db.Model):
     __tablename__ = 'carClass'
     carClassID = db.Column(db.Integer, primary_key=True)
-    className = db.Column(db.String(50), nullable=False)
     price = db.Column(db.Integer, nullable=False)
     type = db.Column(Enum('sedans', 'luxury', 'compacts', 'subcompacts'), nullable=False)
     
     #a car class can have many cars
     cars = db.relationship('Car', backref='class')
     
-    #a car class can have many promotions
+    #a car class can have many promotionssubcompacts
     promotionals = db.relationship('Promotional', backref='promo')
     
     #many-to-many relationship with Address
