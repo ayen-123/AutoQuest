@@ -76,4 +76,8 @@ def CreateUser():
     addressForm = AddressForm
     return render_template('login.html', userForm=userForm, addressForm=addressForm)
 
-        
+@app.route('/shop', methods=['GET','POST'])
+def Shop():
+    carsWithClass = db.session.query(Car, CarClass.price).join(CarClass).all()
+    results = [{'car': car, 'price': price} for car, price in carsWithClass]
+    return render_template('shop.html', cars=results)
