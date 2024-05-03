@@ -18,9 +18,14 @@ def index():
 
 @app.route("/login", methods=['GET','POST'])
 def login():
+    loginForm = LoginForm
+    return render_template('login.html', loginForm=loginForm)
+
+@app.route("/signup", methods=['GET','POST'])
+def signup():
     userForm = UserForm()
     addressForm = AddressForm()
-    return render_template('login.html', userForm=userForm, addressForm=addressForm)
+    return render_template('signup.html', userForm=userForm, addressForm=addressForm)
 
 @app.route('/', methods=['GET', 'POST'])
 def RegisterAddress():
@@ -78,6 +83,22 @@ def CreateUser():
 
 @app.route('/shop', methods=['GET','POST'])
 def Shop():
-    carsWithClass = db.session.query(Car, CarClass.price).join(CarClass).all()
+    car_type = request.args.get('type')
+    if car_type:
+        carsWithClass = db.session.query(Car, CarClass.price).join(CarClass).filter(CarClass.type == car_type).all()
+    else:
+        carsWithClass = db.session.query(Car, CarClass.price).join(CarClass).all()
     results = [{'car': car, 'price': price} for car, price in carsWithClass]
-    return render_template('shop.html', cars=results)
+    return render_template('shop.html', cars=results, car_type=car_type)
+# def Shop():
+#     carsWithClass = db.session.query(Car, CarClass.price).join(CarClass).all()
+#     results = [{'car': car, 'price': price} for car, price in carsWithClass]
+#     return render_template('shop.html', cars=results)
+
+
+@app.route('/car_info/<int:car_id>', methods=['GET','POST'])
+def CarInfo(car_id):
+    car = Car.query.get(car_id)  # Fetch the car using the car_id
+    car_class = CarClass.query.get(car.classID) # Access the CarClass associated with the car object
+    # Render the CarInfo.html template with the fetched information
+    return render_template('CarInfo.html', car=car, car_class=car_class)

@@ -28,11 +28,11 @@
             <li class="has-children">
               <a href="#about-section" class="nav-link">Cars</a>
               <ul class="dropdown arrow-top">
-                  <li><a href="#team-section" class="nav-link">Luxury</a></li>
-                  <li><a href="#pricing-section" class="nav-link">Sedan</a></li>
-                  <li><a href="#faq-section" class="nav-link">Compacts</a></li>
-                  <li><a href="#faq-section" class="nav-link">Subompacts</a></li>
-                  <li><a href="{{ url_for('Shop') }}" class="nav-link">All</a></li>
+                <li><a href="{{ url_for('Shop', type='luxury') }}" class="nav-link">Luxury</a></li>
+                <li><a href="{{ url_for('Shop', type='sedans') }}" class="nav-link">Sedan</a></li>
+                <li><a href="{{ url_for('Shop', type='compacts') }}" class="nav-link">Compacts</a></li>
+                <li><a href="{{ url_for('Shop', type='subcompacts') }}" class="nav-link">Subcompacts</a></li>
+                <li><a href="{{ url_for('Shop') }}" class="nav-link">All</a></li>
               </ul>
           </li>
         </ul>

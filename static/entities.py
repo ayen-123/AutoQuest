@@ -177,13 +177,3 @@ class Customer(User):
     __mapper_args__ = {
         'polymorphic_identity': 'customer',
     }
-
-
-    
-
-    
-    
-    
-    
-    
-    
