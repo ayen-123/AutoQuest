@@ -21,7 +21,7 @@ class UserForm(FlaskForm):
     name = StringField(label='Full Name:', validators=[Length(min=2,max=200), DataRequired()])
     password1 = PasswordField(label='Password:', validators=[Length(min=6),DataRequired()])
     password2 = PasswordField(label='Confirm Password:', validators=[EqualTo('password1'),DataRequired()])
-    address = SelectField(label='Address:', coerce=int, choices=[])
+    address = SelectField(label='Address:', choices=[])
     submit = SubmitField(label='Submit')
     
 class AddressForm(FlaskForm):
@@ -46,7 +46,7 @@ class AddressForm(FlaskForm):
     "Tacurong", "Tagaytay", "Tagbilaran", "Taguig", "Tagum", "Talisay", "Talisay", "Tanauan", "Tandag", "Tangub",
     "Tanjay", "Tarlac City", "Tayabas", "Toledo", "Trece Martires", "Tuguegarao", "Urdaneta", "Valencia",
     "Valenzuela", "Victorias", "Vigan", "Zamboanga City"]
-    city = SelectField(label='City: ', choices=citiesPhilippines, validators=[DataRequired()])
+    city = SelectField(label='City: ', choices=citiesPhilippines, validators=[DataRequired()], id="city")
     
     provincesPhilippines = [
     "Abra", "Agusan del Norte", "Agusan del Sur", "Aklan", "Albay", "Antique", "Apayao", "Aurora", "Basilan",
@@ -65,5 +65,6 @@ class AddressForm(FlaskForm):
     postalCode = StringField(label='Postal Code: ', validators=[DataRequired(), Length(min=4, max=4)])
     
     submit = SubmitField(label='Submit')
+    
     
     

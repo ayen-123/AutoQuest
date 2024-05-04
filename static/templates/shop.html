@@ -11,6 +11,9 @@ Shop
 <title>Product Page</title>
 </head>
 <body>
+  <div class="row">
+    <h1> {{car_type}}</h1>
+  </div>
 <div class="products">
 {% for carInfo in cars %}
   <div class="product">
@@ -21,8 +24,8 @@ Shop
     <p>Color: {{ carInfo.car.carColor }}<br>
       Year made: {{ carInfo.car.yearMade }}<br>
       License Plate: {{ carInfo.car.licensePlate }}</p>
-    <a href="#" class="product__btn btn">Buy Now</a>
-  </div>
+    <a href="{{ url_for('CarInfo', car_id=carInfo.car.carID) }}" class="product__btn btn">Buy Now</a>
+</div>
 {% endfor %}
 
 
@@ -125,6 +128,9 @@ Shop
   .product__btn:hover {
     background-color: mix(rgba(207, 9, 44, 0.95), #000, 95%);
     transform: translateY(-5px);
+  }
+  .row {
+    text-align: center; /* Aligning content of .row at the center */
   }
     </style>
 </html>
