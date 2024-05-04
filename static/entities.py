@@ -11,7 +11,8 @@ dropOff = db.Table(
     db.Column('fromLocation', db.Integer, db.ForeignKey('address.addressID'), nullable=True),
     db.Column('toLocation', db.Integer, db.ForeignKey('address.addressID'), nullable=True),
     db.Column('classID', db.Integer, db.ForeignKey('carClass.carClassID'), nullable=True),
-    db.Column('charge', db.Integer, nullable=False)
+    db.Column('charge', db.Integer, nullable=False),
+    db.Column('isDeleted', db.Boolean, default=False, nullable=False)
 )
 
 #Strong Entities
@@ -23,6 +24,7 @@ class Address(db.Model):
     city = db.Column(db.String(50), nullable=False)
     province = db.Column(db.String(50), nullable=False)
     postalCode = db.Column(db.String(50), nullable=False)
+    isDeleted = db.Column(db.Boolean, nullable=False, default=False)
     
     @hybrid_property
     def fullAddressName(self):
@@ -76,6 +78,8 @@ class Car(db.Model):
     licensePlate = db.Column(db.String(50), nullable=False, unique=True)
     classID = db.Column(db.Integer, db.ForeignKey('carClass.carClassID'), nullable=False) 
     icon = db.Column(db.String(length=5000), nullable=True, unique=False)
+    isDeleted = db.Column(db.Boolean, nullable=False, default=False)
+    
 
 class Promotional(db.Model):
     __tablename__ = 'promotional'
@@ -85,6 +89,8 @@ class Promotional(db.Model):
     startPromoDate = db.Column(db.Date, nullable=False)
     endPromoDate = db.Column(db.Date, nullable=False)
     duration = db.Column(db.Integer, nullable=False)
+    isDeleted = db.Column(db.Boolean, nullable=False, default=False)
+    
     
     #a promotional may be applied to a car that is rented
     rents = db.relationship('Rent', backref='promo')
@@ -104,6 +110,8 @@ class Rent(db.Model):
     receivedClass = db.Column(db.String(50), nullable=False)
     promotionalID = db.Column(db.Integer, db.ForeignKey('promotional.promotionalID'), nullable=True)
     driverLicense = db.Column(db.Integer, db.ForeignKey('user.driverLicense'), nullable=False)
+    isDeleted = db.Column(db.Boolean, nullable=False, default=False)
+    
     
     #explicitly specify foreign key
     toAddress = db.relationship('Address', backref='rentsToAddress', foreign_keys='Rent.locationDropOffID')
@@ -117,7 +125,9 @@ class User(db.Model,UserMixin):
     name = db.Column(db.String(50), nullable=False)
     addressID = db.Column(db.Integer, db.ForeignKey('address.addressID'), nullable = False)
     passwordHash = db.Column(db.String(length=60),nullable=False)
-    type = db.Column(Enum('customer','employee'), default='customer', nullable=False) 
+    type = db.Column(Enum('customer','employee'), default='customer', nullable=False)
+    isDeleted = db.Column(db.Boolean, nullable=False, default=False)
+     
     
     #a user can have many phone numbers
     userPhoneNumbers = db.relationship('PhoneNumber', backref='user_owner')
