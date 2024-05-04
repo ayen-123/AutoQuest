@@ -23,9 +23,8 @@ def login():
 
 @app.route("/signup", methods=['GET','POST'])
 def signup():
-    userForm = UserForm()
-    addressForm = AddressForm()
-    return render_template('signup.html', userForm=userForm, addressForm=addressForm)
+    signupForm = SignupForm
+    return render_template('signup.html', signupForm=SignupForm)
 
 @app.route('/', methods=['GET', 'POST'])
 def RegisterAddress():

@@ -15,10 +15,16 @@ class UserForm(FlaskForm):
         # Check if the driver's license follows the format ###-##-######
         license_number = field.data
         if not re.match(r'^\d{3}-\d{2}-\d{6}$', license_number):
-            raise ValidationError('Invalid driver license format. Please enter a valid Philippine driver license number.')
+            raise ValidationError('Invalid driver license format! Please enter a valid Philippine driver license number.')
+        
+    def validate_email(form, field):
+        email = field.data
+        if '@' not in email:
+            raise ValidationError('Invalid email format! Please enter a valid email address.')
 
     driverLicense = StringField(label='Driver License:', validators=[Length(min=13,max=13), DataRequired(), validate_driverLicense])
     name = StringField(label='Full Name:', validators=[Length(min=2,max=200), DataRequired()])
+    email = StringField(label='Email:', validators=[Length(min=2, max=200), DataRequired(), validate_email])
     password1 = PasswordField(label='Password:', validators=[Length(min=6),DataRequired()])
     password2 = PasswordField(label='Confirm Password:', validators=[EqualTo('password1'),DataRequired()])
     address = SelectField(label='Address:', choices=[])
@@ -64,6 +70,9 @@ class AddressForm(FlaskForm):
     
     postalCode = StringField(label='Postal Code: ', validators=[DataRequired(), Length(min=4, max=4)])
     
+    submit = SubmitField(label='Submit')
+    
+class SignupForm(UserForm, AddressForm):
     submit = SubmitField(label='Submit')
     
     

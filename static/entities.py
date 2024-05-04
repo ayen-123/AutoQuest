@@ -123,6 +123,7 @@ class User(db.Model,UserMixin):
     __tablename__ = 'user'
     driverLicense = db.Column(db.String(50), primary_key=True)
     name = db.Column(db.String(50), nullable=False)
+    email = db.Column(db.String(50), nullable=False)
     addressID = db.Column(db.Integer, db.ForeignKey('address.addressID'), nullable = False)
     passwordHash = db.Column(db.String(length=60),nullable=False)
     type = db.Column(Enum('customer','employee'), default='customer', nullable=False)
