@@ -161,6 +161,7 @@ class PhoneNumber(db.Model):
     phoneNumberID = db.Column(db.Integer, primary_key=True)
     phoneNumbers = db.Column(db.String(50), nullable=False)
     owner = db.Column(db.Integer, db.ForeignKey('user.driverLicense'))
+    isDeleted = db.Column(db.Boolean, nullable=False, default=False)
     
     
 class Employee(User):

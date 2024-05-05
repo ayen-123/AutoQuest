@@ -18,67 +18,71 @@ def index():
 
 @app.route("/login", methods=['GET','POST'])
 def login():
-    loginForm = LoginForm
+    loginForm = LoginForm()
     return render_template('login.html', loginForm=loginForm)
 
-@app.route("/signup", methods=['GET','POST'])
+@app.route("/signup", methods=['GET', 'POST'])
 def signup():
-    signupForm = SignupForm
-    return render_template('signup.html', signupForm=SignupForm)
-
-@app.route('/', methods=['GET', 'POST'])
-def RegisterAddress():
+    userForm = UserForm()
     addressForm = AddressForm()
-    userForm = UserForm()
-    if addressForm.validate_on_submit():
-        streetName = addressForm.streetName.data
-        streetNumber = addressForm.streetNumber.data
-        city = addressForm.city.data
-        province = addressForm.province.data
-        postalCode = addressForm.postalCode.data
+    phoneNumberForm = PhoneNumberForm()
+    print(f"Request method: {request.method}")
+    
+    if request.method == 'POST':
+        print("Form data received:")
+        print(addressForm.data)
         
-        newAddress = Address(streetName=streetName, streetNumber=streetNumber, city=city, province=province, postalCode=postalCode)
-        
-        similarAddress = Address.query.filter(Address.fullAddressName == newAddress.fullAddressName).all()
-        if similarAddress:
-            flash('Address is already in the database!', category='warning')
-            return redirect(url_for('index'))
-        else: 
-            db.session.add(newAddress)
-            db.session.commit()
-            flash(f'Success! Your address has been added!', category='success')
-            return render_template('login.html', userForm=userForm, addressForm=addressForm)
+        if addressForm.validate_on_submit():
+            print("Address form is valid")
+            address_to_create = Address(
+                streetName=addressForm.streetName.data,
+                streetNumber=addressForm.streetNumber.data,
+                city=addressForm.city.data,
+                province=addressForm.province.data,
+                postalCode=addressForm.postalCode.data
+            )
+            db.session.add(address_to_create)
+            db.session.commit()  # Commit the Address object to get the generated addressID
+
+            if userForm.validate_on_submit():
+                # Create the User object using the generated addressID
+                print("User form is valid")
+                user_to_create = User(
+                    driverLicense=userForm.driverLicense.data,
+                    name=userForm.name.data,
+                    email=userForm.email.data,
+                    addressID=address_to_create.addressID,  # Use the generated addressID
+                    passwordHash=userForm.password1.data
+                )
+                db.session.add(user_to_create)
+                db.session.commit()
+
+                if phoneNumberForm.validate_on_submit():
+                    # Create the PhoneNumber object using the generated driverLicense
+                    print("Phone Number form is valid")
+                    phone_to_create = PhoneNumber(
+                        phoneNumbers = phoneNumberForm.phoneNumber.data,
+                        owner = user_to_create.driverLicense # Use the generated driverLicense
+                    )
+                    db.session.add(phone_to_create)
+                    db.session.commit()
+                    flash(f'Success! User has been created!', category='success')
+                    return redirect(url_for('login'))
+                else:
+                    print("Phone Number Form is invalid")
+                    CheckFormError(phoneNumberForm)
+            else:
+                print("User form is invalid")
+                CheckFormError(userForm)     
+        else:
+            print("Address form is invalid")
+            CheckFormError(addressForm)          
     else:
-        CheckFormError(addressForm)
-        return render_template('login.html', userForm=userForm, addressForm=addressForm)
+        print("GET Method, Rendering signup template")
+    return render_template('signup.html', userForm=userForm, addressForm=addressForm, phoneNumberForm=phoneNumberForm)
 
 
 
-@app.route('/', methods=['GET', 'POST'])
-def CreateUser():
-    userForm = UserForm()
-    addresses = Address.query.all()
-    userForm.address.choices = [(address.addressID, address.fullAddressName) for address in addresses]
-
-    if userForm.validate_on_submit():
-        user_to_create = User(
-            driverLicense=userForm.driverLicense.data,
-            addressID=userForm.address.data,
-            name=userForm.name.data,
-            passwordHash=userForm.password1.data,
-        )
-        db.session.add(user_to_create)
-        db.session.commit()
-        flash('Success! User has been created!', category='success')
-        # Redirect to another page after successful form submission
-        return redirect(url_for('login'))
-
-    else:
-        # Display form validation errors
-        CheckFormError(userForm)
-
-    addressForm = AddressForm
-    return render_template('login.html', userForm=userForm, addressForm=addressForm)
 
 @app.route('/shop', methods=['GET','POST'])
 def Shop():

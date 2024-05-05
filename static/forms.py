@@ -3,8 +3,14 @@ from wtforms.fields import DateField
 from wtforms import StringField, SubmitField,IntegerField,FloatField,SelectField,HiddenField,BooleanField,PasswordField
 from wtforms.validators import Length,DataRequired, EqualTo,ValidationError
 from datetime import datetime
+from flask import flash
 import re
 
+def CheckFormError(form):
+    for field, errors in form.errors.items():
+        for error in errors:
+            flash(f"{getattr(form, field).label.text} : {error}", category='error')
+            
 class LoginForm(FlaskForm):
     name=StringField(label='Name:',validators=[DataRequired()])
     password=PasswordField(label='Password:',validators=[DataRequired()])
@@ -22,12 +28,11 @@ class UserForm(FlaskForm):
         if '@' not in email:
             raise ValidationError('Invalid email format! Please enter a valid email address.')
 
-    driverLicense = StringField(label='Driver License:', validators=[Length(min=13,max=13), DataRequired(), validate_driverLicense])
+    driverLicense = StringField(label='Driver License:', validators=[Length(min=13,max=13), DataRequired()])
     name = StringField(label='Full Name:', validators=[Length(min=2,max=200), DataRequired()])
-    email = StringField(label='Email:', validators=[Length(min=2, max=200), DataRequired(), validate_email])
+    email = StringField(label='Email:', validators=[Length(min=2, max=200), DataRequired()])
     password1 = PasswordField(label='Password:', validators=[Length(min=6),DataRequired()])
     password2 = PasswordField(label='Confirm Password:', validators=[EqualTo('password1'),DataRequired()])
-    address = SelectField(label='Address:', choices=[])
     submit = SubmitField(label='Submit')
     
 class AddressForm(FlaskForm):
@@ -72,8 +77,10 @@ class AddressForm(FlaskForm):
     
     submit = SubmitField(label='Submit')
     
-class SignupForm(UserForm, AddressForm):
+class PhoneNumberForm(FlaskForm):
+    phoneNumber = StringField(label='PhoneNumber: ', validators=[Length(min=11,max=11), DataRequired()])
     submit = SubmitField(label='Submit')
+    
     
     
     

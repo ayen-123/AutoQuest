@@ -4,7 +4,6 @@ from flask_sqlalchemy import SQLAlchemy
 from static.admin import admin
 
 if __name__ == "__main__":
-    #app.run(debug=True)
     with app.app_context(): #create the database, if not already created
         db.create_all()
     
