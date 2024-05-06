@@ -1,3 +1,4 @@
+from sqlalchemy import desc
 from static import app, db
 from flask import render_template, redirect, url_for, request,flash, get_flashed_messages
 from static.entities import *
@@ -18,69 +19,91 @@ def index():
 
 @app.route("/login", methods=['GET','POST'])
 def login():
-    loginForm = LoginForm
-    return render_template('login.html', loginForm=loginForm)
+    form = LoginForm()
+    if form.validate_on_submit():
+        attempted_user = User.query.filter_by(email=form.email.data).first()
+        if attempted_user and attempted_user.checkPassword(attemptedPassword=form.password.data):
+            login_user(attempted_user) 
+            flash(f'Success. You are logged in as: {attempted_user.name}', category='success')
+            return redirect(url_for('Shop'))
+        else:
+            flash('Email and password does not exist in the database!',category='danger')
+    return render_template('login.html', form=form)
 
-@app.route("/signup", methods=['GET','POST'])
-def signup():
-    signupForm = SignupForm
-    return render_template('signup.html', signupForm=SignupForm)
-
-@app.route('/', methods=['GET', 'POST'])
-def RegisterAddress():
+@app.route("/registerAddress", methods=['GET','POST'])
+def registerAddress():
     addressForm = AddressForm()
+    print(f"Request method: {request.method}")
+    
+    if request.method == 'POST':
+        print("Form data received:")
+        print(addressForm.data)
+        
+        if addressForm.validate_on_submit():
+            print("Address form is valid")
+            address_to_create = Address(
+                streetName=addressForm.streetName.data,
+                streetNumber=addressForm.streetNumber.data,
+                city=addressForm.city.data,
+                province=addressForm.province.data,
+                postalCode=addressForm.postalCode.data
+            )
+            similarAddress = Address.query.filter(Address.fullAddressName == address_to_create.fullAddressName).all()
+            if similarAddress:
+                flash(f'Address {address_to_create.fullAddressName} is already in the database!',category='warning')
+                return redirect(url_for('index'))
+            else:
+                db.session.add(address_to_create)
+                db.session.commit()  # Commit the Address object to get the generated addressID
+                flash(f'Success! Address {address_to_create.fullAddressName} has been saved!', category='success')
+                return redirect(url_for('signup', address_id = address_to_create.addressID))
+                
+        else:
+            print("Address form is invalid")
+            CheckFormError(addressForm)          
+    else:
+        print("GET Method, Rendering signup template")
+    return render_template('registerAddress.html', addressForm=addressForm)
+    
+
+@app.route("/signup/<int:address_id>", methods=['GET', 'POST'])
+def signup(address_id):
     userForm = UserForm()
-    if addressForm.validate_on_submit():
-        streetName = addressForm.streetName.data
-        streetNumber = addressForm.streetNumber.data
-        city = addressForm.city.data
-        province = addressForm.province.data
-        postalCode = addressForm.postalCode.data
+    print(f"Request method: {request.method}")
+    
+    userAddress = Address.query.filter_by(addressID=address_id).first()
+    userForm.address.choices = [(userAddress.addressID, f'{userAddress.fullAddressName}')]
+    
+    if request.method == 'POST':
+        print("Form data received:")
+        print(userForm.data)
         
-        newAddress = Address(streetName=streetName, streetNumber=streetNumber, city=city, province=province, postalCode=postalCode)
-        
-        similarAddress = Address.query.filter(Address.fullAddressName == newAddress.fullAddressName).all()
-        if similarAddress:
-            flash('Address is already in the database!', category='warning')
-            return redirect(url_for('index'))
-        else: 
-            db.session.add(newAddress)
+        if userForm.validate_on_submit():
+            print("User form is valid")
+            user_to_create = User(
+                driverLicense=userForm.driverLicense.data,
+                name=userForm.name.data,
+                email=userForm.email.data,
+                addressID=userForm.address.data,  
+                passwordHash=userForm.password1.data,
+                type='customer',
+            )
+            db.session.add(user_to_create)
             db.session.commit()
-            flash(f'Success! Your address has been added!', category='success')
-            return render_template('login.html', userForm=userForm, addressForm=addressForm)
+            flash(f'Success! User has been created!', category='success')
+            return redirect(url_for('login'))
+        else:
+            print("User form is invalid")
+            CheckFormError(userForm)
+             
     else:
-        CheckFormError(addressForm)
-        return render_template('login.html', userForm=userForm, addressForm=addressForm)
+        print("GET Method, Rendering signup template")
+    return render_template('signup.html', userForm=userForm, address_id = userAddress.addressID)
 
 
-
-@app.route('/', methods=['GET', 'POST'])
-def CreateUser():
-    userForm = UserForm()
-    addresses = Address.query.all()
-    userForm.address.choices = [(address.addressID, address.fullAddressName) for address in addresses]
-
-    if userForm.validate_on_submit():
-        user_to_create = User(
-            driverLicense=userForm.driverLicense.data,
-            addressID=userForm.address.data,
-            name=userForm.name.data,
-            passwordHash=userForm.password1.data,
-        )
-        db.session.add(user_to_create)
-        db.session.commit()
-        flash('Success! User has been created!', category='success')
-        # Redirect to another page after successful form submission
-        return redirect(url_for('login'))
-
-    else:
-        # Display form validation errors
-        CheckFormError(userForm)
-
-    addressForm = AddressForm
-    return render_template('login.html', userForm=userForm, addressForm=addressForm)
 
 @app.route('/shop', methods=['GET','POST'])
+@login_required
 def Shop():
     car_type = request.args.get('type')
     if car_type:
@@ -89,15 +112,19 @@ def Shop():
         carsWithClass = db.session.query(Car, CarClass.price).join(CarClass).all()
     results = [{'car': car, 'price': price} for car, price in carsWithClass]
     return render_template('shop.html', cars=results, car_type=car_type)
-# def Shop():
-#     carsWithClass = db.session.query(Car, CarClass.price).join(CarClass).all()
-#     results = [{'car': car, 'price': price} for car, price in carsWithClass]
-#     return render_template('shop.html', cars=results)
 
 
 @app.route('/car_info/<int:car_id>', methods=['GET','POST'])
+@login_required
 def CarInfo(car_id):
     car = Car.query.get(car_id)  # Fetch the car using the car_id
     car_class = CarClass.query.get(car.classID) # Access the CarClass associated with the car object
     # Render the CarInfo.html template with the fetched information
     return render_template('CarInfo.html', car=car, car_class=car_class)
+
+@app.route('/logout')
+@login_required
+def logout_page():
+    logout_user()
+    flash("You have been logged out!", category='info')
+    return redirect(url_for('index'))
