@@ -26,28 +26,31 @@ class Address(db.Model):
     postalCode = db.Column(db.String(50), nullable=False)
     isDeleted = db.Column(db.Boolean, nullable=False, default=False)
     
-    @hybrid_property
+    @property
     def fullAddressName(self):
-        return f"{self.streetNumber} {self.streetName}, {self.city}, {self.province}, {self.postalCode}"
+        return f"{self.streetName}, {self.streetNumber}, {self.city}, {self.province}, {self.postalCode}"
     
     #an address can be shared by many users
     users = db.relationship('User', backref='person')
     
     #an address is a location assigned that can be shared by many employees
-    employees = db.relationship('Employee', backref='location', foreign_keys='Employee.locationAssignedID')
+    employees = db.relationship('Employee', backref='location', foreign_keys='Employee.locationAssignedID',
+                                overlaps="employees,location")
     
     #an address can be shared by many rents including to and from location
-    toRents = db.relationship('Rent', backref='toPlace', foreign_keys='Rent.locationDropOffID')
-    fromRents = db.relationship('Rent', backref='fromPlace', foreign_keys='Rent.locationRentedID')
+    toRents = db.relationship('Rent', backref='toPlace', foreign_keys='Rent.locationDropOffID',
+                              overlaps="toPlace,toRents")
+    fromRents = db.relationship('Rent', backref='fromPlace', foreign_keys='Rent.locationRentedID',
+                                overlaps="fromPlace,fromRents")
     
     #many-to-many relationship with Car Class
     fromClass = db.relationship('CarClass', secondary=dropOff, 
                                 foreign_keys='[dropOff.c.fromLocation, dropOff.c.classID]',
-                                backref=db.backref('fromLoc', lazy='dynamic'), overlaps="fromLoc,fromClass")
+                                backref=db.backref('fromLoc', lazy='dynamic'), overlaps="toLoc,toClass")
     
     toClass = db.relationship('CarClass', secondary=dropOff, 
                               foreign_keys='[dropOff.c.toLocation, dropOff.c.classID]',
-                              backref=db.backref('toLoc', lazy='dynamic'), overlaps="toLoc,toClass")
+                              backref=db.backref('toLoc', lazy='dynamic'), overlaps="fromLoc,fromClass")
 
 class CarClass(db.Model):
     __tablename__ = 'carClass'
@@ -65,7 +68,7 @@ class CarClass(db.Model):
     place = db.relationship('Address', secondary=dropOff,
                             foreign_keys='[dropOff.c.classID, dropOff.c.toLocation]',
                             backref=db.backref('location', lazy='dynamic'),
-                            overlaps="fromClass,fromLoc")
+                            overlaps="toClass,toLoc")
     
     
 class Car(db.Model):
@@ -114,8 +117,10 @@ class Rent(db.Model):
     
     
     #explicitly specify foreign key
-    toAddress = db.relationship('Address', backref='rentsToAddress', foreign_keys='Rent.locationDropOffID')
-    fromAddress = db.relationship('Address', backref='rentsFromAddress', foreign_keys='Rent.locationRentedID')
+    toAddress = db.relationship('Address', backref='rentsToAddress', foreign_keys='Rent.locationDropOffID',
+                                overlaps="toPlace,toRents")
+    fromAddress = db.relationship('Address', backref='rentsFromAddress', foreign_keys='Rent.locationRentedID',
+                                  overlaps="fromPlace,fromRents")
     
     
     
@@ -129,6 +134,8 @@ class User(db.Model,UserMixin):
     type = db.Column(Enum('customer','employee'), default='customer', nullable=False)
     isDeleted = db.Column(db.Boolean, nullable=False, default=False)
      
+    def get_id(self):
+        return self.driverLicense
     
     #a user can have many phone numbers
     userPhoneNumbers = db.relationship('PhoneNumber', backref='user_owner')
@@ -137,7 +144,7 @@ class User(db.Model,UserMixin):
     rents = db.relationship('Rent', backref='renters')
     
     def checkPassword(self,attemptedPassword):
-        userPass = User.query.filter_by(id=self.id).first()
+        userPass = User.query.filter_by(driverLicense=self.driverLicense).first()
         if userPass.passwordHash == attemptedPassword:
             return True
         return False
@@ -177,7 +184,8 @@ class Employee(User):
     }
     
     #explicitly specify foreign key
-    assignedAddress = db.relationship('Address', backref='employeeLocations', foreign_keys='Employee.locationAssignedID')
+    assignedAddress = db.relationship('Address', backref='employeeLocations', foreign_keys='Employee.locationAssignedID',
+                                      overlaps="employees,location")
     
     
 
