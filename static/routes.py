@@ -124,13 +124,12 @@ def registerRent(car_id):
     rentForm.locationRentedID.choices = [(location.addressID, f'{location.fullAddressName}') for location in locations] 
     rentForm.locationDropOffID.choices = [(location.addressID, f'{location.fullAddressName}') for location in locations] 
     
-    date_rented = rentForm.dateRented.data 
-    if date_rented is not None: 
-        promos = Promotional.query.filter(Promotional.startPromoDate <= date_rented, Promotional.endPromoDate >= date_rented).all() 
-        rentForm.promotionalID.choices = [(promo.promotionalID, f'{promo.promoTitle}') for promo in promos] 
-    else: 
-        promos = [] 
-        rentForm.promotionalID.choices = [("No promo available")] 
+    date_rented = rentForm.dateRented.data
+    if date_rented is not None:
+        promos = Promotional.query.filter(Promotional.startPromoDate <= date_rented, Promotional.endPromoDate >= date_rented).all()
+        rentForm.promotionalID.choices = [('', 'No promo available')] + [(promo.promotionalID, f'{promo.promoTitle}') for promo in promos]
+    else:
+        rentForm.promotionalID.choices = [('', 'No promo available')]
         
     if request.method == 'POST': 
         print("Form data received:") 
@@ -157,7 +156,9 @@ def registerRent(car_id):
             flash(f'Success! Rent record has been added!', category='success') 
             return redirect(url_for('Shop')) 
         else: 
-            print("Rent form is invalid") 
+            print("Rent form is invalid")
+            for field, errors in rentForm.errors.items():
+                print(f"Errors for field '{field}': {', '.join(errors)}") 
             CheckFormError(rentForm) 
     # Render registerRent.html template with car details 
     return render_template('registerRent.html', car=car, rentForm=rentForm) 
@@ -170,10 +171,7 @@ def get_promos():
         if promos: 
             promo_data = [{"promotionalID": promo.promotionalID, "promoName": promo.promoName, "discountRate": promo.discountRate} for promo in promos] 
             return jsonify(promo_data) 
-        else: # If no promos are available for the selected date, return a special case 
-            return jsonify([{"promotionalID": None, "promoName": "No promo available", "discountRate":None}]) 
-    else: # If date_rented is None, return an empty list 
-        return jsonify([{"promotionalID":None, "promoName": "No promo available", "discountRate":None}])
+
 
 
 @app.route('/shop', methods=['GET','POST'])

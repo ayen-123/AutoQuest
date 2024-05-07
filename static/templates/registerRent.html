@@ -299,11 +299,11 @@ body{
                   });
 
                   // Add a special case if no promos available
-                  if (data.length === 1 && data[0].promotionalID === "none") {
-                      const option = document.createElement("option");
-                      option.value = "none";
-                      option.textContent = "No promo available";
-                      promoSelect.appendChild(option);
+                  if (data.length === 1 && data[0].promotionalID === null) {
+                    const option = document.createElement("option");
+                    option.value = ''; // Change this line
+                    option.textContent = "No promo available";
+                    promoSelect.appendChild(option);
                   }
               })
               .catch(error => console.error('Error:', error));
