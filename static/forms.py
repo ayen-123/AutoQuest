@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms.fields import DateField
 from wtforms import StringField, SubmitField,IntegerField,FloatField,SelectField,HiddenField,BooleanField,PasswordField
-from wtforms.validators import Length,DataRequired, EqualTo,ValidationError
+from wtforms.validators import Length,DataRequired, EqualTo,ValidationError, Optional
 from datetime import datetime
 from flask import flash
 import re
@@ -100,7 +100,7 @@ class RentForm(FlaskForm):
     dateReturned = DateField(label='Date of Return:', validators=[DataRequired()])
     requestedClass = SelectField(label='Car Class:', choices=[], validators=[DataRequired()])
     receivedClass = SelectField(label='Received Car Class:', choices=[], validators=[DataRequired()])
-    promotionalID = SelectField(label='Promo:', choices=[])
+    promotionalID = SelectField(label='Promo:', choices=[('', 'No promo available')], validators=[Optional()])
     
     def validate_odometerReturned(self, field):
         # Check if odometerReturned is less than or equal to odometerRented
@@ -110,6 +110,14 @@ class RentForm(FlaskForm):
         # Check if dateReturned is before or equal to dateRented
         if field.data <= self.dateRented.data:
             raise ValidationError('Date of Return must be after Date of Rental.')
+        
+    def validate_promotionalID(self, field):
+        if field.data is None:  # Change this line
+            if not self.promotionalID.choices or (len(self.promotionalID.choices) == 1 and self.promotionalID.choices[0][0] is None):  # And this line
+                # This condition means there are no promotionals available
+                return
+            else:
+                raise ValidationError('Please select a valid promotional.')
     
     
 
