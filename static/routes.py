@@ -1,6 +1,7 @@
+import random
 from sqlalchemy import desc
 from static import app, db
-from flask import render_template, redirect, url_for, request,flash, get_flashed_messages
+from flask import jsonify, render_template, redirect, url_for, request,flash, get_flashed_messages
 from static.entities import *
 import locale
 from datetime import datetime
@@ -100,6 +101,79 @@ def signup(address_id):
         print("GET Method, Rendering signup template")
     return render_template('signup.html', userForm=userForm, address_id = userAddress.addressID)
 
+def randomize_odometer():
+    # Generate a random number between 3 and 100 (inclusive) and multiply by 10
+    return random.randint(3, 100) * 10
+
+@app.route("/registerRent/<int:car_id>", methods=['GET', 'POST']) 
+@login_required 
+def registerRent(car_id): 
+    car = Car.query.get(car_id) 
+    rentForm = RentForm() 
+    
+    carClasses = CarClass.query.all() 
+    rentForm.requestedClass.choices = [(carClass.carClassID, f'{carClass.type}') for carClass in carClasses] 
+    
+    receivedClass = CarClass.query.filter_by(carClassID=car.classID).first() 
+    rentForm.receivedClass.choices = [(receivedClass.carClassID, f'{receivedClass.type}')] 
+    
+    rentForm.odometerRented.default = randomize_odometer() 
+    rentForm.process(request.form) 
+    
+    locations = Address.query.filter_by(isStoreLocation=True) 
+    rentForm.locationRentedID.choices = [(location.addressID, f'{location.fullAddressName}') for location in locations] 
+    rentForm.locationDropOffID.choices = [(location.addressID, f'{location.fullAddressName}') for location in locations] 
+    
+    date_rented = rentForm.dateRented.data 
+    if date_rented is not None: 
+        promos = Promotional.query.filter(Promotional.startPromoDate <= date_rented, Promotional.endPromoDate >= date_rented).all() 
+        rentForm.promotionalID.choices = [(promo.promotionalID, f'{promo.promoTitle}') for promo in promos] 
+    else: 
+        promos = [] 
+        rentForm.promotionalID.choices = [("No promo available")] 
+        
+    if request.method == 'POST': 
+        print("Form data received:") 
+        print(rentForm.data) 
+        
+        if rentForm.validate_on_submit(): 
+            print("Rent form is valid") 
+            rent_to_create = Rent( 
+                                  carID = car.carID, 
+                                  locationRentedID = rentForm.locationRentedID.data, 
+                                  locationDropOffID = rentForm.locationDropOffID.data, 
+                                  odometerRented = rentForm.odometerRented.data, 
+                                  odometerReturned = rentForm.odometerReturned.data, 
+                                  gasVolume = rentForm.gasVolume.data, 
+                                  dateRented = rentForm.dateRented.data, 
+                                  dateReturned = rentForm.dateReturned.data, 
+                                  requestedClass = rentForm.requestedClass.data, 
+                                  receivedClass = rentForm.receivedClass.data, 
+                                  promotionalID = rentForm.promotionalID.data, 
+                                  driverLicense = current_user.driverLicense 
+                                  ) 
+            db.session.add(rent_to_create) 
+            db.session.commit() 
+            flash(f'Success! Rent record has been added!', category='success') 
+            return redirect(url_for('Shop')) 
+        else: 
+            print("Rent form is invalid") 
+            CheckFormError(rentForm) 
+    # Render registerRent.html template with car details 
+    return render_template('registerRent.html', car=car, rentForm=rentForm) 
+
+@app.route("/get_promos") 
+def get_promos(): 
+    date_rented = request.args.get("date_rented") 
+    if date_rented: 
+        promos = Promotional.query.filter(Promotional.startPromoDate <= date_rented, Promotional.endPromoDate >= date_rented).all() 
+        if promos: 
+            promo_data = [{"promotionalID": promo.promotionalID, "promoName": promo.promoName, "discountRate": promo.discountRate} for promo in promos] 
+            return jsonify(promo_data) 
+        else: # If no promos are available for the selected date, return a special case 
+            return jsonify([{"promotionalID": None, "promoName": "No promo available", "discountRate":None}]) 
+    else: # If date_rented is None, return an empty list 
+        return jsonify([{"promotionalID":None, "promoName": "No promo available", "discountRate":None}])
 
 
 @app.route('/shop', methods=['GET','POST'])

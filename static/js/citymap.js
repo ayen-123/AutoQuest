@@ -81,6 +81,7 @@ const provinceCityMap = {
     "Zamboanga del Norte": ["Dapitan", "Dipolog"],
     "Zamboanga del Sur": ["Pagadian", "Zamboanga City"],
     "Zamboanga Sibugay": ["Ipil"],
+    "Hamilton" : ["Hamilton"],
     "Metro Manila": ["Caloocan", "Las Piñas", "Makati", "Malabon", "Mandaluyong", "Manila", "Marikina", "Muntinlupa", "Navotas", "Parañaque", "Pasay", "Pasig", "Quezon City", "San Juan", "Taguig", "Valenzuela"]
 };
 

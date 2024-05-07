@@ -25,6 +25,7 @@ class Address(db.Model):
     province = db.Column(db.String(50), nullable=False)
     postalCode = db.Column(db.String(50), nullable=False)
     isDeleted = db.Column(db.Boolean, nullable=False, default=False)
+    isStoreLocation = db.Column(db.Boolean, nullable=False, default=False)
     
     @property
     def fullAddressName(self):
@@ -83,10 +84,15 @@ class Car(db.Model):
     icon = db.Column(db.String(length=5000), nullable=True, unique=False)
     isDeleted = db.Column(db.Boolean, nullable=False, default=False)
     
+    @property
+    def carName(self):
+        return f"{self.carMake} {self.carModel}"
+    
 
 class Promotional(db.Model):
     __tablename__ = 'promotional'
     promotionalID = db.Column(db.Integer, primary_key=True)
+    promoName = db.Column(db.String(50), nullable=False)
     classID = db.Column(db.Integer, db.ForeignKey('carClass.carClassID'), nullable=False)
     discountRate = db.Column(db.Integer, nullable=False)
     startPromoDate = db.Column(db.Date, nullable=False)
@@ -94,6 +100,9 @@ class Promotional(db.Model):
     duration = db.Column(db.Integer, nullable=False)
     isDeleted = db.Column(db.Boolean, nullable=False, default=False)
     
+    @property
+    def promoTitle(self):
+        return f"{self.promoName}: {int(self.discountRate * 100)}% off"
     
     #a promotional may be applied to a car that is rented
     rents = db.relationship('Rent', backref='promo')
@@ -112,7 +121,7 @@ class Rent(db.Model):
     requestedClass = db.Column(db.String(50), nullable=False)
     receivedClass = db.Column(db.String(50), nullable=False)
     promotionalID = db.Column(db.Integer, db.ForeignKey('promotional.promotionalID'), nullable=True)
-    driverLicense = db.Column(db.Integer, db.ForeignKey('user.driverLicense'), nullable=False)
+    driverLicense = db.Column(db.String(50), db.ForeignKey('user.driverLicense'), nullable=False)
     isDeleted = db.Column(db.Boolean, nullable=False, default=False)
     
     
@@ -167,13 +176,13 @@ class PhoneNumber(db.Model):
     __tablename__ = 'phoneNumber'
     phoneNumberID = db.Column(db.Integer, primary_key=True)
     phoneNumbers = db.Column(db.String(50), nullable=False)
-    owner = db.Column(db.Integer, db.ForeignKey('user.driverLicense'))
+    owner = db.Column(db.String(50), db.ForeignKey('user.driverLicense'))
     isDeleted = db.Column(db.Boolean, nullable=False, default=False)
     
     
 class Employee(User):
     __tablename__ = 'employee'
-    driverLicense = db.Column(db.Integer, db.ForeignKey('user.driverLicense'), primary_key=True)
+    driverLicense = db.Column(db.String(50), db.ForeignKey('user.driverLicense'), primary_key=True)
     locationAssignedID = db.Column(db.Integer, db.ForeignKey('address.addressID'), nullable=False)
     category = db.Column(Enum('worker','driver','manager','clerk','cleaner'), nullable=False)
     isPresident = db.Column(db.Boolean, nullable=False, default=False)
@@ -191,7 +200,7 @@ class Employee(User):
 
 class Customer(User):
     __tablename__ = 'customer'
-    driverLicense = db.Column(db.Integer, db.ForeignKey('user.driverLicense'), primary_key=True)
+    driverLicense = db.Column(db.String(50), db.ForeignKey('user.driverLicense'), primary_key=True)
     description = db.Column(db.String(50), nullable=False)
     
     __mapper_args__ = {

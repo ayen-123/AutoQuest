@@ -59,7 +59,7 @@ class AddressForm(FlaskForm):
     "Negros Oriental", "Northern Samar", "Nueva Ecija", "Nueva Vizcaya", "Occidental Mindoro", "Oriental Mindoro",
     "Palawan", "Pampanga", "Pangasinan", "Quezon", "Quirino", "Rizal", "Romblon", "Samar", "Sarangani", "Siquijor",
     "Sorsogon", "South Cotabato", "Southern Leyte", "Sultan Kudarat", "Sulu", "Surigao del Norte", "Surigao del Sur",
-    "Tarlac", "Tawi-Tawi", "Zambales", "Zamboanga del Norte", "Zamboanga del Sur", "Zamboanga Sibugay", "Metro Manila"]
+    "Tarlac", "Tawi-Tawi", "Zambales", "Zamboanga del Norte", "Zamboanga del Sur", "Zamboanga Sibugay", "Metro Manila", "Hamilton"]
     province = SelectField(label='Province: ', choices=provincesPhilippines, validators=[DataRequired()])
     
     citiesPhilippines = [
@@ -79,7 +79,7 @@ class AddressForm(FlaskForm):
     "Santo Tomas", "Santiago", "Silay", "Sipalay", "Sorsogon City", "Surigao City", "Tabaco", "Tabuk", "Tacloban",
     "Tacurong", "Tagaytay", "Tagbilaran", "Taguig", "Tagum", "Talisay", "Talisay", "Tanauan", "Tandag", "Tangub",
     "Tanjay", "Tarlac City", "Tayabas", "Toledo", "Trece Martires", "Tuguegarao", "Urdaneta", "Valencia",
-    "Valenzuela", "Victorias", "Vigan", "Zamboanga City"]
+    "Valenzuela", "Victorias", "Vigan", "Zamboanga City", "Hamilton"]
     city = SelectField(label='City: ', choices=citiesPhilippines, validators=[DataRequired()], id="city")
     
     postalCode = StringField(label='Postal Code: ', validators=[DataRequired(), Length(min=4, max=4)])
@@ -89,6 +89,30 @@ class AddressForm(FlaskForm):
 class PhoneNumberForm(FlaskForm):
     phoneNumber = StringField(label='PhoneNumber: ', validators=[Length(min=11,max=11), DataRequired()])
     submit = SubmitField(label='Submit')
+    
+class RentForm(FlaskForm):
+    locationRentedID = SelectField(label='Pick-up Location:', choices=[], validators=[DataRequired()])
+    locationDropOffID = SelectField(label='Drop-off Location:', choices=[], validators=[DataRequired()])
+    odometerRented = IntegerField('Odometer Rented', validators=[DataRequired()])
+    odometerReturned = IntegerField('Odometer Returned', validators=[DataRequired()])
+    gasVolume = SelectField(label='Gas Volume:', choices=['empty', 'quarter_full', 'half_full', 'three_quarters_full', 'full'], validators=[DataRequired()])
+    dateRented = DateField(label='Date of Rental:', validators=[DataRequired()])
+    dateReturned = DateField(label='Date of Return:', validators=[DataRequired()])
+    requestedClass = SelectField(label='Car Class:', choices=[], validators=[DataRequired()])
+    receivedClass = SelectField(label='Received Car Class:', choices=[], validators=[DataRequired()])
+    promotionalID = SelectField(label='Promo:', choices=[])
+    
+    def validate_odometerReturned(self, field):
+        # Check if odometerReturned is less than or equal to odometerRented
+        if field.data <= self.odometerRented.data:
+            raise ValidationError('Odometer Returned must be greater than Odometer Rented.')
+    def validate_dateReturned(self, field):
+        # Check if dateReturned is before or equal to dateRented
+        if field.data <= self.dateRented.data:
+            raise ValidationError('Date of Return must be after Date of Rental.')
+    
+    
+
     
     
     
