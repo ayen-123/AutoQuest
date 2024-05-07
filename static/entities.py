@@ -57,6 +57,10 @@ class CarClass(db.Model):
     __tablename__ = 'carClass'
     carClassID = db.Column(db.Integer, primary_key=True)
     price = db.Column(db.Integer, nullable=False)
+    oneWeekPrice = db.Column(db.Integer, nullable=False)
+    twoWeekPrice = db.Column(db.Integer, nullable=False)
+    oneMonthPrice = db.Column(db.Integer, nullable=False)
+    
     type = db.Column(Enum('sedans', 'luxury', 'compacts', 'subcompacts'), nullable=False)
     
     #a car class can have many cars

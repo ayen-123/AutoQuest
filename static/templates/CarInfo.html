@@ -70,42 +70,40 @@ Car Info
                                                         <th>Value</th>
                                                     </tr>
                                                     <tr>
-                                                        <td>Ear Coupling</td>
-                                                        <td>Around Ear</td>
+                                                        <td>Car ID</td>
+                                                        <td>{{car.carID}}</td>
                                                     </tr>
                                                     <tr>
-                                                        <td>Transducer Principle</td>
-                                                        <td>Dynamic, Closed-back</td>
+                                                        <td>License Plate</td>
+                                                        <td>{{ car.licensePlate }}</td>
                                                     </tr>
                                                     <tr>
-                                                        <td>Frequency Response</td>
-                                                        <td>16Hz – 22kHz</td>
+                                                      <td>Car Make</td>
+                                                      <td>{{ car.carMake }}</td>
                                                     </tr>
                                                     <tr>
-                                                        <td>Sound Pressure Level (SPL)</td>
-                                                        <td>113 dB (Passive: 1 kHz/1 Vrms)</td>
+                                                      <td>Car Model</td>
+                                                      <td>{{ car.carModel }}</td>
                                                     </tr>
                                                     <tr>
-                                                        <td>Total Harmonic Distortion (THD)</td>
-                                                        <td>&lt;0.5% (1 kHz, 100 dB SPL)</td>
+                                                      <td>Year Made</td>
+                                                      <td>{{ car.yearMade }}</td>
                                                     </tr>
                                                     <tr>
-                                                        <td>Volume Control</td>
-                                                        <td>Earcup control when Bluetooth connected</td>
+                                                      <td>Car Color</td>
+                                                      <td>{{ car.carColor }}</td>
                                                     </tr>
                                                     <tr>
-                                                        <td>Microphone Type</td>
-                                                        <td>Dual omni-directional microphone <br>(2 mic beam forming
-                                                            array)
-                                                        </td>
+                                                      <td>One Week Price</td>
+                                                      <td>₱ {{ car_class.oneWeekPrice }}.00</td>
                                                     </tr>
                                                     <tr>
-                                                        <td>Cable / Connector</td>
-                                                        <td>1.4m (Detachable) / 3.5mm Angled</td>
+                                                      <td>Two Weeks Price</td>
+                                                      <td>₱ {{ car_class.twoWeekPrice }}.00</td>
                                                     </tr>
                                                     <tr>
-                                                        <td>Weight</td>
-                                                        <td>260g (9.17 oz)</td>
+                                                      <td>One Month Price</td>
+                                                      <td>₱ {{ car_class.oneMonthPrice }}.00</td>
                                                     </tr>
                                                 </table>
                                             </div>
