@@ -183,6 +183,10 @@ def Shop():
     else:
         carsWithClass = db.session.query(Car, CarClass.price).join(CarClass).all()
     results = [{'car': car, 'price': price} for car, price in carsWithClass]
+    if not car_type:
+        car_type = "All"
+    else:
+        car_type = car_type.capitalize() if car_type != "None" else "All"
     return render_template('shop.html', cars=results, car_type=car_type)
 
 
@@ -200,3 +204,117 @@ def logout_page():
     logout_user()
     flash("You have been logged out!", category='info')
     return redirect(url_for('index'))
+
+
+@app.route('/update_profile/<string:user_id>', methods=['GET','POST'])
+@login_required
+def update_profile(user_id):
+    if request.method == 'POST':
+        name = request.form['name']
+        email = request.form['email']
+        user = User.query.filter_by(driverLicense=user_id).first()
+        if user:
+            user.name = name
+            user.email = email
+            db.session.commit()
+            flash('Profile updated successfully!', category='success')
+            return redirect(url_for('userPage', user_id=user_id))
+        else:
+            flash('User not found!', category='error')
+        return redirect(url_for('userPage', user_id=user_id))
+    else:
+        pass
+
+@app.route('/register_phone/<string:user_id>', methods=['POST'])
+def registerPhone(user_id):
+    if request.method == 'POST':
+        # Get the phone number from the form
+        phone_number = request.form['PhoneNumber']
+        phoneNumber = PhoneNumber(phoneNumbers=phone_number, owner=user_id)
+        db.session.add(phoneNumber)
+        db.session.commit()
+        return redirect(url_for('userPage', user_id=user_id))
+    else:
+        pass
+
+@app.route('/employee_verification/<string:user_id>', methods=['GET','POST'])
+def EmployeeVerification(user_id):
+    # Retrieve the user from the database
+    user = User.query.get(user_id)
+
+    # Check if the user exists
+    if not user:
+        flash('User not found', 'error')
+        return redirect(url_for('userPage', user_id=user_id))
+
+    # Get the verification code from the form
+    verification_code = request.form.get('Verification')
+    category = ''
+
+    # Determine the category based on the verification code
+    if verification_code == 'c23151811518':
+        category = 'worker'
+    elif verification_code == 'c418922518':
+        category = 'driver'
+    elif verification_code == 'c31251811':
+        category = 'clerk'
+    elif verification_code == 'c3125114':
+        category = 'cleaner'
+    elif verification_code == 'CM1618519':
+        category = 'manager'
+    elif verification_code == 'CM22935':
+        category = 'manager'
+    else:
+        flash('Invalid verification code', 'error')
+        return redirect(url_for('userPage', user_id=user_id))
+
+    try:
+        # Check if the driverLicense already exists
+        existing_employee = Employee.query.filter_by(driverLicense=user.driverLicense).first()
+        if existing_employee:
+            flash('Employee with driver license {} already exists'.format(user.driverLicense), 'error')
+            return redirect(url_for('userPage', user_id=user_id))
+
+        # Create the employee object
+        employee = Employee(
+            driverLicense=user.driverLicense,
+            name=user.name,  # Use the existing user's name
+            email=user.email,
+            addressID=user.addressID,
+            locationAssignedID=user.addressID,
+            passwordHash=user.passwordHash,
+            type='employee',
+            category=category
+        )
+        
+        # Set additional attributes based on the verification code
+        if verification_code == 'CM1618519':
+            employee.isPresident = True
+        elif verification_code == 'CM22935':
+            employee.isVicePresident = True
+
+        # Update user type
+        user.type = 'employee'
+
+        # Add the employee to the session and commit changes
+        db.session.add(employee)
+        db.session.commit()
+
+        flash('User successfully verified as an employee with category: {}'.format(category), 'success')
+    except IntegrityError as e:
+        # Handle integrity errors
+        db.session.rollback()
+        flash('Integrity error occurred: {}'.format(str(e)), 'error')
+
+    return redirect(url_for('userPage', user_id=user_id))
+
+@app.route('/deletePhone/<int:phone_id>', methods=['GET','POST'])
+def deletePhone(phone_id):
+    phone = PhoneNumber.query.get(phone_id)
+    if phone:
+        phone.isDeleted = True
+        db.session.commit()
+        flash('Phone number deleted successfully', 'success')
+    else:
+        flash('Phone number not found', 'error')
+    return redirect(url_for('userPage', user_id=phone.owner))
