@@ -1,3 +1,4 @@
+from flask import flash
 from static import db, bcrypt
 from datetime import datetime
 from flask_login import UserMixin
@@ -142,6 +143,7 @@ class User(db.Model,UserMixin):
     driverLicense = db.Column(db.String(50), primary_key=True)
     name = db.Column(db.String(50), nullable=False)
     email = db.Column(db.String(50), nullable=False)
+    verification_code = db.Column(db.String(50), nullable=True)
     addressID = db.Column(db.Integer, db.ForeignKey('address.addressID'), nullable = False)
     passwordHash = db.Column(db.String(length=60),nullable=False)
     type = db.Column(Enum('customer','employee'), default='customer', nullable=False)
@@ -174,6 +176,47 @@ class User(db.Model,UserMixin):
         'polymorphic_identity': 'user',
         'polymorphic_on': type
     }
+    
+    @classmethod
+    def create_user(cls, driverLicense, name, email, addressID, passwordHash, verification_code=None):
+        if verification_code:
+            if verification_code == 'LVWR1518':
+                category = 'worker'
+                return Employee(driverLicense=driverLicense, name=name, verification_code=verification_code, email=email, addressID=addressID, passwordHash=passwordHash, category=category)
+            elif verification_code == 'LVDR4189':
+                category = 'driver'
+                return Employee(driverLicense=driverLicense, name=name, verification_code=verification_code, email=email, addressID=addressID, passwordHash=passwordHash, category=category)
+            elif verification_code == 'LVCK3125':
+                category = 'clerk'
+                return Employee(driverLicense=driverLicense, name=name, verification_code=verification_code, email=email, addressID=addressID, passwordHash=passwordHash, category=category)
+            elif verification_code == 'LVCR3125':
+                category = 'cleaner'
+                return Employee(driverLicense=driverLicense, name=name, verification_code=verification_code, email=email, addressID=addressID, passwordHash=passwordHash, category=category)
+            elif verification_code == 'LVMM1618': 
+                category = 'manager'
+                return Employee(driverLicense=driverLicense, name=name, verification_code=verification_code, email=email, addressID=addressID, passwordHash=passwordHash, category=category)
+            elif verification_code == 'HDMM2293':
+                category = 'manager' 
+                locationAssignedID = 1
+                return Employee(driverLicense=driverLicense, name=name, verification_code=verification_code, email=email, addressID=addressID, passwordHash=passwordHash, category=category, locationAssignedID=locationAssignedID)
+            elif verification_code == 'HDPR9108':
+                category = 'manager' 
+                locationAssignedID = 1
+                isPresident = True
+                return Employee(driverLicense=driverLicense, name=name, verification_code=verification_code, email=email, addressID=addressID, passwordHash=passwordHash, category=category, locationAssignedID=locationAssignedID, isPresident=isPresident)
+            elif verification_code == 'HDVP5128':
+                category = 'manager' 
+                locationAssignedID = 1
+                isVicePresident = True
+                return Employee(driverLicense=driverLicense, name=name, verification_code=verification_code, email=email, addressID=addressID, passwordHash=passwordHash, category=category, locationAssignedID=locationAssignedID, isVicePresident=isVicePresident)
+            else:
+                return None
+        
+        else:
+            d='Customer instance'
+            return Customer(driverLicense=driverLicense, name=name, email=email, verification_code=None, addressID=addressID, passwordHash=passwordHash, type='customer', description=d)
+    
+    
 
 
 class PhoneNumber(db.Model):
@@ -187,8 +230,8 @@ class PhoneNumber(db.Model):
 class Employee(User):
     __tablename__ = 'employee'
     driverLicense = db.Column(db.String(50), db.ForeignKey('user.driverLicense'), primary_key=True)
-    locationAssignedID = db.Column(db.Integer, db.ForeignKey('address.addressID'), nullable=False)
-    category = db.Column(Enum('worker','driver','manager','clerk','cleaner'), nullable=False)
+    locationAssignedID = db.Column(db.Integer, db.ForeignKey('address.addressID'), nullable=True)
+    category = db.Column(Enum('worker','driver','manager','clerk','cleaner'), nullable=True)
     isPresident = db.Column(db.Boolean, nullable=False, default=False)
     isVicePresident = db.Column(db.Boolean, nullable=False, default=False)
     

@@ -1,12 +1,13 @@
 import random
 from sqlalchemy import desc
 from static import app, db
-from flask import jsonify, render_template, redirect, url_for, request,flash, get_flashed_messages
+from flask import jsonify, render_template, redirect, url_for, request, flash, get_flashed_messages
 from static.entities import *
 import locale
 from datetime import datetime
 from static.forms import *
 from flask_login import current_user, login_user,logout_user,login_required
+from sqlalchemy.orm import aliased
 
 def CheckFormError(form):
     if form.errors != {}:
@@ -26,7 +27,7 @@ def login():
         if attempted_user and attempted_user.checkPassword(attemptedPassword=form.password.data):
             login_user(attempted_user) 
             flash(f'Success. You are logged in as: {attempted_user.name}', category='success')
-            return redirect(url_for('Shop'))
+            return redirect(url_for('index'))
         else:
             flash('Email and password does not exist in the database!',category='danger')
     return render_template('login.html', form=form)
@@ -81,18 +82,24 @@ def signup(address_id):
         
         if userForm.validate_on_submit():
             print("User form is valid")
-            user_to_create = User(
+            verification_code = userForm.verification_code.data
+            
+            user_to_create = User.create_user(
                 driverLicense=userForm.driverLicense.data,
                 name=userForm.name.data,
                 email=userForm.email.data,
                 addressID=userForm.address.data,  
                 passwordHash=userForm.password1.data,
-                type='customer',
+                verification_code=verification_code
             )
-            db.session.add(user_to_create)
-            db.session.commit()
-            flash(f'Success! User has been created!', category='success')
-            return redirect(url_for('login'))
+            if user_to_create is None:
+                # Invalid verification code, display the error message
+                flash('Invalid verification code', category='danger')
+            else:
+                db.session.add(user_to_create)
+                db.session.commit()
+                flash(f'Success! User has been created!', category='success')
+                return redirect(url_for('login'))
         else:
             print("User form is invalid")
             CheckFormError(userForm)
@@ -183,6 +190,12 @@ def Shop():
     else:
         carsWithClass = db.session.query(Car, CarClass.price).join(CarClass).all()
     results = [{'car': car, 'price': price} for car, price in carsWithClass]
+    
+    if not car_type:
+        car_type = "All"
+    else:
+        car_type = car_type.capitalize() if car_type != "None" else "All"
+        
     return render_template('shop.html', cars=results, car_type=car_type)
 
 
@@ -200,3 +213,80 @@ def logout_page():
     logout_user()
     flash("You have been logged out!", category='info')
     return redirect(url_for('index'))
+
+@app.route('/User/<string:user_id>', methods=['GET','POST'])
+@login_required
+def userPage(user_id):
+    user = User.query.get(user_id)
+    AddressAlias = aliased(Address)
+    rents_with_cars_and_addresses = db.session.query(Rent, Car, Address.addressID.label('pickup_address_id'), AddressAlias.addressID.label('dropoff_address_id'), Address, AddressAlias) \
+                                      .join(Car, Rent.carID == Car.carID) \
+                                      .outerjoin(Address, Rent.locationRentedID == Address.addressID) \
+                                      .outerjoin(AddressAlias, Rent.locationDropOffID == AddressAlias.addressID) \
+                                      .join(User, Rent.driverLicense == User.driverLicense) \
+                                      .filter(User.driverLicense == user_id) \
+                                      .all()
+
+    rents = []
+    for rent, car, pickup_address_id, dropoff_address_id, pickup_address, dropoff_address in rents_with_cars_and_addresses:
+        rent_data = {
+            'rent': rent,
+            'car': car,
+            'pickup_address': pickup_address,
+            'dropoff_address': dropoff_address
+        }
+        rents.append(rent_data)
+
+    phoneNumbers = PhoneNumber.query.filter_by(owner=user_id, isDeleted=False).all()
+    return render_template('User.html', user=user, rents=rents, phoneNumbers=phoneNumbers)
+
+@app.route('/update_profile/<string:user_id>', methods=['GET','POST'])
+@login_required
+def update_profile(user_id):
+    if request.method == 'POST':
+        name = request.form['name']
+        email = request.form['email']
+        user = User.query.filter_by(driverLicense=user_id).first()
+        if user:
+            user.name = name
+            user.email = email
+            db.session.commit()
+            flash('Profile updated successfully!', category='success')
+            return redirect(url_for('userPage', user_id=user_id))
+        else:
+            flash('User not found!', category='error')
+        return redirect(url_for('userPage', user_id=user_id))
+    else:
+        pass
+
+@app.route('/register_phone/<string:user_id>', methods=['POST'])
+def registerPhone(user_id):
+    if request.method == 'POST':
+        # Get the phone number from the form
+        phone_number = request.form['PhoneNumber']
+
+        # Define a regular expression pattern for a valid 11-digit Philippines phone number
+        pattern = r'^\d{11}$'  # Matches exactly 11 digits
+
+        # Check if the phone number matches the pattern
+        if re.match(pattern, phone_number):
+            phoneNumber = PhoneNumber(phoneNumbers=phone_number, owner=user_id)
+            db.session.add(phoneNumber)
+            db.session.commit()
+            return redirect(url_for('userPage', user_id=user_id))
+        else:
+            flash('Invalid phone number. Please enter a valid 11-digit phone number.', category='danger')
+            return redirect(url_for('userPage', user_id=user_id))
+    else:
+        pass
+    
+@app.route('/deletePhone/<int:phone_id>', methods=['GET','POST'])
+def deletePhone(phone_id):
+    phone = PhoneNumber.query.get(phone_id)
+    if phone:
+        phone.isDeleted = True
+        db.session.commit()
+        flash('Phone number deleted successfully', 'success')
+    else:
+        flash('Phone number not found', 'error')
+    return redirect(url_for('userPage', user_id=phone.owner))
