@@ -205,6 +205,31 @@ def logout_page():
     flash("You have been logged out!", category='info')
     return redirect(url_for('index'))
 
+@app.route('/User/<string:user_id>', methods=['GET','POST'])
+@login_required
+def userPage(user_id):
+    user = User.query.get(user_id)
+    AddressAlias = aliased(Address)
+    rents_with_cars_and_addresses = db.session.query(Rent, Car, Address.addressID.label('pickup_address_id'), AddressAlias.addressID.label('dropoff_address_id'), Address, AddressAlias) \
+                                      .join(Car, Rent.carID == Car.carID) \
+                                      .outerjoin(Address, Rent.locationRentedID == Address.addressID) \
+                                      .outerjoin(AddressAlias, Rent.locationDropOffID == AddressAlias.addressID) \
+                                      .join(User, Rent.driverLicense == User.driverLicense) \
+                                      .filter(User.driverLicense == user_id) \
+                                      .all()
+
+    rents = []
+    for rent, car, pickup_address_id, dropoff_address_id, pickup_address, dropoff_address in rents_with_cars_and_addresses:
+        rent_data = {
+            'rent': rent,
+            'car': car,
+            'pickup_address': pickup_address,
+            'dropoff_address': dropoff_address
+        }
+        rents.append(rent_data)
+
+    phoneNumbers = PhoneNumber.query.filter_by(owner=user_id, isDeleted=False).all()
+    return render_template('User.html', user=user, rents=rents, phoneNumbers=phoneNumbers)
 
 @app.route('/update_profile/<string:user_id>', methods=['GET','POST'])
 @login_required
