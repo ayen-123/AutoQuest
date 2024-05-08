@@ -214,48 +214,96 @@ def logout_page():
     flash("You have been logged out!", category='info')
     return redirect(url_for('index'))
 
-@app.route('/User/<string:user_id>', methods=['GET','POST'])
+@app.route('/User/<string:user_id>', methods=['GET', 'POST'])
 @login_required
 def userPage(user_id):
+    EmployeeLocation = None
+    locations = Address.query.all()
+    location_choices = [(location.addressID, f'{location.fullAddressName}') for location in locations]
+                        
     user = User.query.get(user_id)
     AddressAlias = aliased(Address)
-    rents_with_cars_and_addresses = db.session.query(Rent, Car, Address.addressID.label('pickup_address_id'), AddressAlias.addressID.label('dropoff_address_id'), Address, AddressAlias) \
-                                      .join(Car, Rent.carID == Car.carID) \
-                                      .outerjoin(Address, Rent.locationRentedID == Address.addressID) \
-                                      .outerjoin(AddressAlias, Rent.locationDropOffID == AddressAlias.addressID) \
-                                      .join(User, Rent.driverLicense == User.driverLicense) \
-                                      .filter(User.driverLicense == user_id) \
-                                      .all()
+    rentsWithAll = db.session.query(Rent, Car,  Address.addressID.label('pickupAddressID'), AddressAlias.addressID.label('dropoffAddressID'),Address, AddressAlias, Promotional, CarClass) \
+                                            .outerjoin(Promotional, Rent.promotionalID == Promotional.promotionalID) \
+                                            .join(Car, Rent.carID == Car.carID) \
+                                            .join(CarClass, Car.classID == CarClass.carClassID) \
+                                            .outerjoin(Address, Rent.locationRentedID == Address.addressID) \
+                                            .outerjoin(AddressAlias, Rent.locationDropOffID == AddressAlias.addressID) \
+                                            .join(User, Rent.driverLicense == User.driverLicense) \
+                                            .filter(User.driverLicense == user_id) \
+                                            .all()
 
     rents = []
-    for rent, car, pickup_address_id, dropoff_address_id, pickup_address, dropoff_address in rents_with_cars_and_addresses:
+    for rent, car,pickupAddressID,dropoffAddressID, pickupAddress, dropoffAddress, promo, carClass in rentsWithAll:
+        rentalDuration = (rent.dateReturned - rent.dateRented).days + 1
+        rentalPrice = calculateRentalPrice(rentalDuration, carClass, promo)
+        totalPrice = rentalPrice
+
         rent_data = {
             'rent': rent,
             'car': car,
-            'pickup_address': pickup_address,
-            'dropoff_address': dropoff_address
+            'pickupAddress': pickupAddress,
+            'dropoffAddress': dropoffAddress,
+            'promo': promo,
+            'rentalPrice': rentalPrice,
+            'totalPrice': totalPrice
         }
         rents.append(rent_data)
+        if user.type == 'employee':
+            user = Employee.query.get(user_id)
+            EmployeeLocation = Address.query.get(user.locationAssignedID)
+
 
     phoneNumbers = PhoneNumber.query.filter_by(owner=user_id, isDeleted=False).all()
-    return render_template('User.html', user=user, rents=rents, phoneNumbers=phoneNumbers)
+    return render_template('User.html', user=user, rents=rents, phoneNumbers=phoneNumbers, location_choices=location_choices, EmployeeLocation=EmployeeLocation)
+
+def calculateRentalPrice(rentalDuration, carClass, promo):
+    base_price = getPrice(rentalDuration, carClass)
+    if promo:
+        discount_rate = promo.discountRate
+        discount_amount = base_price * discount_rate
+        total_price = base_price - discount_amount
+    else:
+        total_price = base_price
+
+    return total_price
+
+def getPrice(rentalDuration, carClass):
+    if rentalDuration <= 1:
+        base_price = carClass.price
+    elif rentalDuration <= 7:
+        base_price = carClass.oneWeekPrice
+    elif rentalDuration <= 14:
+        base_price = carClass.twoWeekPrice
+    else:
+        base_price = carClass.oneMonthPrice + (rentalDuration - 30) * carClass.price
+
+    return base_price
 
 @app.route('/update_profile/<string:user_id>', methods=['GET','POST'])
 @login_required
 def update_profile(user_id):
+    locations = Address.query.all()
+
+    location_choices = [(location.addressID, f'{location.fullAddressName}') for location in locations]
+
     if request.method == 'POST':
         name = request.form['name']
         email = request.form['email']
+        locationAssignedID = request.form['location']
         user = User.query.filter_by(driverLicense=user_id).first()
         if user:
             user.name = name
             user.email = email
+            if user.type == 'employee':
+                user = Employee.query.get(user_id)
+                user.locationAssignedID = locationAssignedID
             db.session.commit()
             flash('Profile updated successfully!', category='success')
             return redirect(url_for('userPage', user_id=user_id))
         else:
             flash('User not found!', category='error')
-        return redirect(url_for('userPage', user_id=user_id))
+        return redirect(url_for('userPage', user_id=user_id, ))
     else:
         pass
 
