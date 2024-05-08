@@ -46,6 +46,17 @@ SignUp
               {{ userForm.address(class="form-control", placeholder="Select your address") }}
             </div>
         </div>
+
+        <div class="smalltitle">
+          Employee Verification
+        </div>
+        <div class="user-details">
+          <div class="input-box">
+              <span class="details">Verification Code</span>
+              {{ userForm.verification_code(placeholder="Enter employee verification code") }}
+          </div>
+        </div>
+
         <div class="button" onclick="submitForm('user_form')">
           <input type="submit" value="Register" id="register-btn">
       </div>
@@ -64,7 +75,6 @@ SignUp
 }
 body{
   height: 100vh;
-  display: flex;
   justify-content: center;
   align-items: center;
   padding: 10px;

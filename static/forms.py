@@ -42,6 +42,7 @@ class UserForm(FlaskForm):
     password1 = PasswordField(label='Password:', validators=[Length(min=6), DataRequired()])
     password2 = PasswordField(label='Confirm Password:', validators=[EqualTo('password1'), DataRequired()])
     address = SelectField(label='Address:', choices=[], validators=[DataRequired()])
+    verification_code = StringField(label='Verification Code:')
     submit = SubmitField(label='Submit')
     
 class AddressForm(FlaskForm):
