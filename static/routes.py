@@ -189,7 +189,7 @@ def Shop():
 
     if query:
         carsWithClass = db.session.query(Car, CarClass.price).join(CarClass).filter(
-            (Car.carMake.ilike(f'%{query}%') | Car.carModel.ilike(f'%{query}%'))
+            (Car.carMake.ilike(f'%{query}%') | Car.carModel.ilike(f'%{query}%') | Car.yearMade.ilike(f'%{query}%') | Car.carColor.ilike(f'%{query}%') | Car.licensePlate.ilike(f'%{query}%'))
         ).all()
     elif car_type:
         carsWithClass = db.session.query(Car, CarClass.price).join(CarClass).filter(CarClass.type == car_type).all()
