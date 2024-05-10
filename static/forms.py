@@ -47,7 +47,7 @@ class UserForm(FlaskForm):
     
 class AddressForm(FlaskForm):
     streetName = StringField(label='Street Name: ', validators=[Length(min=2,max=200), DataRequired()])
-    streetNumber = StringField(label='Street Number: ', validators=[Length(min=2,max=200), DataRequired()])
+    streetNumber = StringField(label='Street Number: ', validators=[Length(min=2,max=5), DataRequired()])
     
     provincesPhilippines = [
     "Abra", "Agusan del Norte", "Agusan del Sur", "Aklan", "Albay", "Antique", "Apayao", "Aurora", "Basilan",
