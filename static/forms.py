@@ -44,10 +44,16 @@ class UserForm(FlaskForm):
     address = SelectField(label='Address:', choices=[], validators=[DataRequired()])
     verification_code = StringField(label='Verification Code:')
     submit = SubmitField(label='Submit')
+
+
+def validate_numeric(form, field):
+    value = field.data
+    if not value.isdigit():
+        raise ValidationError("Please enter a numeric value.")
     
 class AddressForm(FlaskForm):
     streetName = StringField(label='Street Name: ', validators=[Length(min=2,max=200), DataRequired()])
-    streetNumber = StringField(label='Street Number: ', validators=[Length(min=2,max=5), DataRequired()])
+    streetNumber = StringField(label='Street Number: ', validators=[Length(min=2,max=5), DataRequired(), validate_numeric])
     
     provincesPhilippines = [
     "Abra", "Agusan del Norte", "Agusan del Sur", "Aklan", "Albay", "Antique", "Apayao", "Aurora", "Basilan",
@@ -83,7 +89,7 @@ class AddressForm(FlaskForm):
     "Valenzuela", "Victorias", "Vigan", "Zamboanga City", "Hamilton"]
     city = SelectField(label='City: ', choices=citiesPhilippines, validators=[DataRequired()], id="city")
     
-    postalCode = StringField(label='Postal Code: ', validators=[DataRequired(), Length(min=4, max=4)])
+    postalCode = StringField(label='Postal Code: ', validators=[DataRequired(), Length(min=4, max=4), validate_numeric])
     
     submit = SubmitField(label='Submit')
     

@@ -178,6 +178,12 @@ def get_promos():
         if promos: 
             promo_data = [{"promotionalID": promo.promotionalID, "promoName": promo.promoName, "discountRate": promo.discountRate} for promo in promos] 
             return jsonify(promo_data) 
+        else:
+            promo_data = [{"promotionalID": "", "promoName": "No promo available", "discountRate": None} for promo in promos] 
+            return jsonify(promo_data) 
+    else:
+        promo_data = [{"promotionalID": "", "promoName": "No promo available", "discountRate": None} for promo in promos] 
+        return jsonify(promo_data) 
 
 
 
