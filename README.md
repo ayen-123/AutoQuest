@@ -43,7 +43,7 @@ AutoQuest is a server-rendered web application for managing a car rental service
 - Small JSON endpoint(s)
   - Example JSON response for available promos (get_promos) to support dynamic client behavior.
 
-## The Process
+## Process/Architecture
 The application is arranged as a small Flask package inside `static/`. Models live in `static/entities.py`, forms in `static/forms.py`, and request handlers in `static/routes.py`. On startup `run.py` imports the app, ensures the database tables exist (db.create_all()) and initializes the admin integration. Request flow is typical of server-rendered Flask apps: a route handler queries models via SQLAlchemy, passes objects to Jinja2 templates, and returns rendered HTML. Authentication state is managed with Flask-Login and the user loader points at `entities.User`. Pricing logic and rental calculations are implemented in route-level helper functions (e.g., getPrice, calculateRentalPrice).
 
 ## How to run 
